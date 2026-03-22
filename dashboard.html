@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMVIII | Secure Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-glow: rgba(255, 0, 0, 0.7);
+            --primary-solid: #ff0000;
+            --bg-dark: #000000;
+            --panel-bg: rgba(20, 20, 20, 0.6);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #b0b0b0;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            background-color: var(--panel-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            padding: 50px 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 0 40px -10px var(--primary-glow),
+                        inset 0 10px 15px -5px rgba(255, 255, 255, 0.1);
+        }
+
+        .dashboard-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-solid), transparent);
+            filter: blur(1px);
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.2em;
+            color: var(--text-main);
+        }
+
+        .user-intel {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        .intel-label {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .intel-data {
+            color: var(--primary-solid);
+            font-size: 1.2em;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .btn-logout {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: transparent;
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 68, 68, 0.1);
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+        }
+
+        /* Loading state */
+        #content { display: none; }
+        #loader { color: var(--primary-solid); font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div id="loader">Decrypting Mainframe Credentials...</div>
+        
+        <div id="content">
+            <h1>Operative Status: <span style="color: var(--primary-solid)">ACTIVE</span></h1>
+            <p style="color: var(--text-muted);">Welcome to the inner sanctum of MMVIII.</p>
+            
+            <div class="user-intel">
+                <div class="intel-label">Assigned Designation</div>
+                <div class="intel-data" id="user-email">Loading...</div>
+            </div>
+
+            <button class="btn-logout" id="logout-btn">Sever Connection (Log Out)</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // CRITICAL: INJECT YOUR KEYS HERE JUST LIKE THE AUTH PAGE
+        const supabaseUrl = 'https://sxgormgshpwmeejpzepk.supabase.co/'; 
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4Z29ybWdzaHB3bWVlanB6ZXBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzg0MDUsImV4cCI6MjA4OTc1NDQwNX0.OGkdFeecrCr2DxEt_ghI_9jzwE9VxZST5h_wmI5-2RM';
+        const db = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Intercept the authentication state
+        async function initializeDashboard() {
+            // Check if there is a logged-in user in the local session
+            const { data: { user }, error } = await db.auth.getUser();
+
+            if (user) {
+                // If they have clearance, reveal the dashboard and print their email
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                document.getElementById('user-email').innerText = user.email;
+            } else {
+                // If they don't have clearance, kick them back to the login page immediately
+                window.location.replace('auth.html');
+            }
+        }
+
+        // Execute initialization
+        initializeDashboard();
+
+        // Wire up the logout sequence
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            const { error } = await db.auth.signOut();
+            if (error) {
+                console.error("Logout failure:", error);
+            } else {
+                // Purge them from the mainframe and send them to the login screen
+                window.location.replace('auth.html');
+            }
+        });
+    </script>
+</body>
+</html>

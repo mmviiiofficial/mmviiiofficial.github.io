@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMVIII | Genesis Central</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-glow: rgba(255, 0, 0, 0.7);
+            --primary-solid: #ff0000;
+            --bg-dark: #000000;
+            --panel-bg: rgba(20, 20, 20, 0.6);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #b0b0b0;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* The matching, glowing, glossy central card */
+        .home-container {
+            background-color: var(--panel-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            padding: 60px 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            border: 1px solid var(--panel-border);
+            /* The same double-glow effect */
+            box-shadow: 0 0 40px -10px var(--primary-glow),
+                        inset 0 10px 15px -5px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Matching top edge highlight */
+        .home-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-solid), transparent);
+            filter: blur(1px);
+        }
+
+        h1 {
+            margin: 0 0 15px 0;
+            font-size: 2.8em;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: -1px;
+        }
+
+        p {
+            margin: 0 0 45px 0;
+            color: var(--text-muted);
+            font-weight: 300;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        /* The "ACCESS SYSTEM PORTAL" button gets the glowing treatment */
+        .portal-btn {
+            display: inline-block;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #ff0000, var(--primary-solid));
+            color: var(--bg-dark);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px var(--primary-glow);
+            transition: all 0.3s ease;
+        }
+
+        .portal-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.9);
+        }
+
+        .source-link {
+            display: block;
+            margin-top: 25px;
+            color: #555;
+            font-size: 0.85em;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .source-link:hover {
+            color: #888;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="home-container">
+        <h1>Welcome to MMVIII</h1>
+        <p>The genesis of something massive. Initialize your access clearance to join the initiative.</p>
+        
+        <a href="auth.html" class="portal-btn">ENTER MMVIII MAIN ACCESS</a>
+        
+        <a href="https://github.com/mmviiiofficial/mmviiiofficial.github.io" class="source-link">View Mainframe Source</a>
+    </div>
+
+</body>
+</html>
