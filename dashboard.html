@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMVIII | OS Genesis</title>
+    <title>MM8 | Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="assets/myicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -18,83 +19,47 @@
         }
         
         * { box-sizing: border-box; }
-        body {
-            margin: 0; padding: 0; font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark); color: var(--text-main);
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden;
-        }
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
 
-        /* --- SCREEN MANAGEMENT --- */
-        .screen { display: none; width: 100%; height: 100%; justify-content: center; align-items: center; flex-direction: column; }
+        .screen { display: none; width: 100%; height: 100%; justify-content: center; align-items: center; flex-direction: column; position: relative; }
         .screen.active { display: flex; }
 
-        /* --- ONBOARDING & ACCOUNT TYPE STYLES --- */
-        .form-container {
-            background-color: var(--panel-bg); backdrop-filter: blur(20px); border-radius: 16px;
-            border: 1px solid var(--panel-border); box-shadow: 0 0 40px -15px var(--primary-glow);
-            padding: 40px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
-        }
+        /* Smooth UI Toast Notification */
+        #ui-toast { position: fixed; bottom: -100px; right: 30px; background: var(--success); color: #000; padding: 15px 25px; border-radius: 8px; font-weight: 600; box-shadow: 0 0 20px rgba(0,255,136,0.4); transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; }
+        #ui-toast.show { bottom: 30px; }
+
+        /* Sleek Back Button - FIXED POSITIONING */
+        .back-btn { background: transparent; border: 1px solid var(--panel-border); color: var(--text-main); padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: 600; font-size: 0.9em; display: flex; align-items: center; gap: 8px; }
+        .back-btn:hover { border-color: var(--primary-solid); background: rgba(255,0,0,0.1); transform: translateX(-5px); }
+        .messenger-layout-wrapper { width: 95%; max-width: 1300px; display: flex; flex-direction: column; gap: 15px; }
+
+        /* Forms & Dash */
+        .form-container { background-color: var(--panel-bg); backdrop-filter: blur(20px); border-radius: 16px; border: 1px solid var(--panel-border); box-shadow: 0 0 40px -15px var(--primary-glow); padding: 40px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
         .form-container::-webkit-scrollbar { width: 4px; }
         .form-container::-webkit-scrollbar-thumb { background: var(--primary-solid); }
-
         h2 { margin: 0 0 10px 0; color: white; font-weight: 800; font-size: 2em; letter-spacing: -1px; }
         p.sub { color: var(--text-muted); margin-bottom: 25px; }
-        
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; }
-        .input-group input, .input-group textarea {
-            width: 100%; background: #111; border: 1px solid #333; border-radius: 8px;
-            padding: 12px; color: white; font-family: 'Inter'; transition: 0.3s;
-        }
+        .input-group input, .input-group textarea { width: 100%; background: #111; border: 1px solid #333; border-radius: 8px; padding: 12px; color: white; font-family: 'Inter'; transition: 0.3s; }
         .input-group input:focus, .input-group textarea:focus { border-color: var(--primary-solid); outline: none; box-shadow: 0 0 10px rgba(255,0,0,0.2); }
-        
-        .btn-main {
-            width: 100%; padding: 15px; background: linear-gradient(135deg, #aa0000, var(--primary-solid));
-            color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1em;
-            cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px;
-        }
+        .btn-main { width: 100%; padding: 15px; background: linear-gradient(135deg, #aa0000, var(--primary-solid)); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1em; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }
         .btn-main:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--primary-glow); }
 
-        .acc-type-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; }
-        .acc-card {
-            background: #111; border: 1px solid #333; padding: 20px; border-radius: 12px;
-            cursor: pointer; transition: 0.3s; text-align: left;
-        }
-        .acc-card:hover { border-color: var(--text-muted); }
-        .acc-card.selected { border-color: var(--primary-solid); background: rgba(255,0,0,0.05); }
-        .acc-card h3 { margin: 0 0 5px 0; color: white; }
-        .acc-card p { margin: 0; font-size: 0.85em; color: var(--text-muted); }
-        .acc-card.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-
-        /* --- MAIN PORTAL DASHBOARD STYLES --- */
-        .portal-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;
-            width: 90%; max-width: 1000px; padding: 20px;
-        }
-        .app-icon {
-            background: var(--panel-bg); border: 1px solid var(--panel-border); padding: 30px 20px;
-            border-radius: 16px; text-align: center; cursor: pointer; transition: 0.3s;
-        }
+        .portal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; width: 90%; max-width: 1000px; padding: 20px; }
+        .app-icon { background: var(--panel-bg); border: 1px solid var(--panel-border); padding: 30px 20px; border-radius: 16px; text-align: center; cursor: pointer; transition: 0.3s; }
         .app-icon:hover:not(.disabled) { border-color: var(--primary-solid); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(255,0,0,0.15); }
         .app-icon.disabled { opacity: 0.3; cursor: not-allowed; }
-        .app-icon h3 { margin: 15px 0 0 0; font-size: 1.1em; }
 
-        /* --- MESSENGER APP STYLES --- */
-        .messenger-container {
-            width: 95%; max-width: 1300px; height: 90vh; background: var(--panel-bg);
-            border-radius: 16px; border: 1px solid var(--panel-border); display: flex; overflow: hidden;
-        }
-        
+        /* Messenger Container */
+        .messenger-container { width: 100%; height: 85vh; background: var(--panel-bg); border-radius: 16px; border: 1px solid var(--panel-border); display: flex; overflow: hidden; }
         .ms-sidebar { width: 350px; border-right: 1px solid var(--panel-border); display: flex; flex-direction: column; background: #0a0a0a; }
         .ms-header { padding: 20px; border-bottom: 1px solid var(--panel-border); }
         .ms-tabs { display: flex; gap: 10px; margin-top: 15px; }
         .ms-tab { flex: 1; padding: 10px; text-align: center; background: #1a1a1a; cursor: pointer; border-radius: 6px; font-size: 0.85em; font-weight: 600; color: var(--text-muted); transition: 0.3s;}
         .ms-tab.active { background: var(--primary-solid); color: white; }
-        
         .ms-list { flex: 1; overflow-y: auto; padding: 10px; }
         
-        /* Contact/Search Cards */
         .contact-card { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #111; margin-bottom: 8px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; transition: 0.2s;}
         .contact-card:hover { border-color: #333; }
         .contact-card.active { border-color: var(--primary-solid); background: rgba(255,0,0,0.1); }
@@ -110,44 +75,60 @@
         .chat-actions { display: flex; gap: 15px; }
         .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
         .icon-btn:hover { color: var(--primary-solid); transform: scale(1.1); }
-
         .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .message { max-width: 65%; padding: 12px 16px; border-radius: 12px; font-size: 0.95em; line-height: 1.4; }
+        .message { max-width: 65%; padding: 12px 16px; border-radius: 12px; font-size: 0.95em; line-height: 1.4; word-wrap: break-word; }
         .msg-me { background: linear-gradient(135deg, #880000, var(--primary-solid)); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
         .msg-them { background: #1a1a1a; border: 1px solid #333; align-self: flex-start; border-bottom-left-radius: 2px; }
-        
         .chat-input { padding: 20px; border-top: 1px solid var(--panel-border); background: #0a0a0a; display: flex; gap: 10px; }
         .chat-input input { flex: 1; background: #111; border: 1px solid #333; padding: 15px; border-radius: 8px; color: white; outline: none; }
         .chat-input input:focus { border-color: var(--primary-solid); }
-
         #search-bar { width: 100%; padding: 10px; background: #111; border: 1px solid #333; border-radius: 6px; color: white; margin-bottom: 15px; display: none;}
         
-        .video-modal { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column; justify-content: center; align-items: center; }
-        .video-grid { display: flex; gap: 20px; width: 80%; height: 60%; }
-        .vid-box { flex: 1; background: #111; border: 1px solid #333; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: #555; font-size: 1.2em; }
-        .call-controls { margin-top: 30px; display: flex; gap: 20px; }
-        .end-call { background: #ff0000; padding: 15px 30px; border-radius: 30px; border: none; color: white; font-weight: bold; cursor: pointer; }
+        /* The Master Picture-in-Picture Video UI */
+        .video-modal { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); z-index: 100; flex-direction: column; justify-content: center; align-items: center; }
+        .video-container { position: relative; width: 90%; max-width: 1000px; height: 70vh; background: #050505; border-radius: 16px; overflow: hidden; border: 1px solid #333; box-shadow: 0 0 50px rgba(255,0,0,0.1); }
+        
+        #remote-video { width: 100%; height: 100%; object-fit: cover; background: #111; }
+        #local-video { position: absolute; bottom: 20px; right: 20px; width: 200px; height: 150px; object-fit: cover; border-radius: 12px; border: 2px solid var(--primary-solid); box-shadow: 0 10px 20px rgba(0,0,0,0.5); background: #222; z-index: 10; transition: 0.3s; }
+        #local-video:hover { transform: scale(1.05); }
 
-        /* General UI */
+        .call-controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; z-index: 20; }
+        .end-call { background: #ff0000; padding: 15px 30px; border-radius: 30px; border: none; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(255,0,0,0.4); transition: 0.3s; }
+        .end-call:hover { transform: scale(1.1); }
+        
         #loader { font-size: 1.5em; color: var(--primary-solid); font-weight: 800; letter-spacing: 2px; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
+    <div id="ui-toast">Notification</div>
+
     <div id="screen-loading" class="screen active">
-        <div id="loader">INITIALIZING MMVIII...</div>
+        <div id="loader">INITIALIZING MM8...</div>
     </div>
 
     <div id="screen-onboarding" class="screen">
         <div class="form-container">
             <h2>Identity Setup</h2>
-            <p class="sub">Establish your parameters in the matrix.</p>
+            <p class="sub">Establish your parameters and secure your access key.</p>
             <form id="setup-form">
                 <div class="input-group">
-                    <label>Unique Username (User ID)</label>
+                    <label>Unique MM8 Username</label>
                     <input type="text" id="in-username" required placeholder="e.g. metatron_88">
                 </div>
+                
+                <div style="background: rgba(255,0,0,0.05); border: 1px solid rgba(255,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <div class="input-group">
+                        <label style="color:var(--primary-solid)">Create Security Key (Password)</label>
+                        <input type="password" id="in-pass" required placeholder="Minimum 6 characters">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>Confirm Security Key</label>
+                        <input type="password" id="in-pass-confirm" required placeholder="Repeat password">
+                    </div>
+                </div>
+
                 <div class="input-group">
                     <label>Display Name</label>
                     <input type="text" id="in-display" required placeholder="Marcus Metatron">
@@ -160,44 +141,13 @@
                     <label>Profile Picture URL</label>
                     <input type="url" id="in-avatar" placeholder="https://imgur.com/your-image.jpg">
                 </div>
-                <div class="input-group">
-                    <label>About / Bio</label>
-                    <textarea id="in-about" rows="3" placeholder="Lead keyboardist. Future billionaire."></textarea>
-                </div>
-                <div class="input-group">
-                    <label>External Links</label>
-                    <input type="text" id="in-links" placeholder="github.com/mmviii">
-                </div>
-                <button type="submit" class="btn-main">Save Identity</button>
+                <button type="submit" class="btn-main">Forge Identity & Enter Matrix</button>
             </form>
         </div>
     </div>
 
-    <div id="screen-account-type" class="screen">
-        <div class="form-container" style="text-align: center;">
-            <h2>Select Clearance Level</h2>
-            <p class="sub">Define your role in the MMVIII ecosystem.</p>
-            
-            <div class="acc-type-grid">
-                <div class="acc-card selected" onclick="selectType('User')">
-                    <h3>Standard User</h3>
-                    <p>Access social modules, messenger, and standard feeds.</p>
-                </div>
-                <div class="acc-card disabled">
-                    <h3>Artist (Locked)</h3>
-                    <p>Portfolio tools, audio distribution. Coming soon.</p>
-                </div>
-                <div class="acc-card disabled">
-                    <h3>Professional (Locked)</h3>
-                    <p>Business suites, analytics, enterprise tools. Coming soon.</p>
-                </div>
-            </div>
-            <button class="btn-main" onclick="finalizeSetup()">Enter Mainframe</button>
-        </div>
-    </div>
-
     <div id="screen-main-dash" class="screen">
-        <h2 style="margin-bottom: 5px;">MMVIII Central OS</h2>
+        <h2 style="margin-bottom: 5px;">MM8 Dashboard</h2>
         <p class="sub" id="dash-welcome">Welcome back, Operative.</p>
         
         <div class="portal-grid">
@@ -206,106 +156,115 @@
                 <h3>Messenger</h3>
             </div>
             <div class="app-icon disabled"><h3>Stories</h3></div>
-            <div class="app-icon disabled"><h3>Shorts</h3></div>
-            <div class="app-icon disabled"><h3>News</h3></div>
             <div class="app-icon disabled"><h3>Feeds</h3></div>
-            <div class="app-icon disabled"><h3>Posts</h3></div>
-            <div class="app-icon disabled"><h3>MM8 Portal</h3></div>
             <div class="app-icon disabled"><h3>Settings</h3></div>
         </div>
-        <button class="icon-btn" style="margin-top: 30px; border: 1px solid #333; padding: 10px;" onclick="logOut()">Log Out</button>
+        <button class="btn-main" style="width:auto; margin-top: 30px; padding: 10px 20px; background: transparent; border: 1px solid #333;" onclick="logOut()">LOGOUT</button>
     </div>
 
     <div id="screen-messenger" class="screen">
-        <div class="messenger-container">
+        
+        <div class="messenger-layout-wrapper">
             
-            <div class="ms-sidebar">
-                <div class="ms-header">
-                    <h2 style="font-size: 1.5em; margin:0;">Comms Link</h2>
-                    <div class="ms-tabs">
-                        <div class="ms-tab active" id="tab-chats" onclick="switchTab('chats')">Chats</div>
-                        <div class="ms-tab" id="tab-connect" onclick="switchTab('connect')">Connect</div>
-                    </div>
-                </div>
-                
-                <div class="ms-list">
-                    <input type="text" id="search-bar" placeholder="Search username (e.g. metatron)...">
-                    <div id="dynamic-list">
+            <div style="display: flex; justify-content: flex-start;">
+                <button class="back-btn" onclick="switchScreen('screen-main-dash')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Back to Hub
+                </button>
+            </div>
+
+            <div class="messenger-container">
+                <div class="ms-sidebar">
+                    <div class="ms-header">
+                        <h2 style="font-size: 1.5em; margin:0;">MM8 MESSENGER</h2>
+                        <div class="ms-tabs">
+                            <div class="ms-tab active" id="tab-chats" onclick="switchTab('chats')">Chats</div>
+                            <div class="ms-tab" id="tab-connect" onclick="switchTab('connect')">Connect</div>
                         </div>
+                    </div>
+                    
+                    <div class="ms-list">
+                        <input type="text" id="search-bar" placeholder="Search username (e.g. john_doe)...">
+                        <div id="dynamic-list"></div>
+                    </div>
+                </div>
+
+                <div class="ms-main">
+                    <div class="video-modal" id="video-ui">
+                        <h2 style="color:white; margin-bottom: 20px; z-index: 20;" id="call-status">Secure Comms Standby</h2>
+                        <div class="video-container">
+                            <video id="remote-video" autoplay playsinline></video>
+                            <video id="local-video" autoplay muted playsinline></video>
+                            
+                            <div class="call-controls">
+                                <button id="answer-btn" style="display:none; background: var(--success); padding: 15px 30px; border-radius: 30px; border: none; color: black; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(0,255,136,0.4);">ACCEPT CALL</button>
+                                <button class="end-call" onclick="endCall()">END CALL</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ms-chat-header" id="chat-header" style="display:none;">
+                        <div>
+                            <h3 style="margin:0;" id="chat-target-name">Target Name</h3>
+                            <span style="font-size:0.75em; color:var(--success);">User Active</span>
+                        </div>
+                        <div class="chat-actions">
+                            <button class="icon-btn" onclick="startCall('audio')" title="Voice Comms"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></button>
+                            <button class="icon-btn" onclick="startCall('video')" title="Video Comms"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg></button>
+                        </div>
+                    </div>
+
+                    <div class="chat-box" id="chat-box">
+                        <div style="margin: auto; color: #555; text-align:center;">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            <p>Select a connection to begin chat.</p>
+                        </div>
+                    </div>
+
+                    <form class="chat-input" id="chat-form" style="display:none;">
+                        <input type="text" id="msg-input" placeholder="Type message..." autocomplete="off">
+                        <button type="submit" class="btn-main" style="width:auto; margin:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+                    </form>
                 </div>
             </div>
-
-            <div class="ms-main">
-                
-                <div class="video-modal" id="video-ui">
-                    <h2 style="color:white; margin-bottom: 20px;" id="call-status">Establishing Secure P2P Link...</h2>
-                    <div class="video-grid">
-                        <div class="vid-box">Local Camera Feeds Offline</div>
-                        <div class="vid-box">Remote Stream Pending</div>
-                    </div>
-                    <div class="call-controls">
-                        <button class="end-call" onclick="document.getElementById('video-ui').style.display='none'">Terminate Connection</button>
-                    </div>
-                </div>
-
-                <div class="ms-chat-header" id="chat-header" style="display:none;">
-                    <div>
-                        <h3 style="margin:0;" id="chat-target-name">Target Name</h3>
-                        <span style="font-size:0.75em; color:var(--success);">Encrypted Line Active</span>
-                    </div>
-                    <div class="chat-actions">
-                        <button class="icon-btn" onclick="startCall('audio')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></button>
-                        <button class="icon-btn" onclick="startCall('video')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg></button>
-                    </div>
-                </div>
-
-                <div class="chat-box" id="chat-box">
-                    <div style="margin: auto; color: #555; text-align:center;">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                        <p>Select a connection to begin transmission.</p>
-                    </div>
-                </div>
-
-                <form class="chat-input" id="chat-form" style="display:none;">
-                    <input type="text" id="msg-input" placeholder="Type message..." autocomplete="off">
-                    <button type="submit" class="btn-main" style="width:auto; margin:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
-                </form>
-            </div>
-            
         </div>
-        <button style="position:absolute; top: 20px; left: 20px; background:none; color:var(--text-muted); border:none; cursor:pointer;" onclick="switchScreen('screen-main-dash')">← Back to Hub</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // --- SECURE KEYS ---
+        // --- Custom OS UI Tools ---
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('ui-toast');
+            toast.innerText = message;
+            toast.style.background = isError ? 'var(--primary-solid)' : 'var(--success)';
+            toast.style.color = isError ? 'white' : 'black';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        // --- 1. CORE SETUP ---
         const supabaseUrl = 'https://sxgormgshpwmeejpzepk.supabase.co/'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4Z29ybWdzaHB3bWVlanB6ZXBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzg0MDUsImV4cCI6MjA4OTc1NDQwNX0.OGkdFeecrCr2DxEt_ghI_9jzwE9VxZST5h_wmI5-2RM';
         const db = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- GLOBAL STATE ---
         let userAuth = null;
         let userProfile = null;
-        let currentChatUser = null;
-        let friendsList = [];
+        let systemChannelActive = false; // Prevents the Ghost Echo bug!
 
-        // --- CORE NAVIGATION ---
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
         }
 
-        // --- BOOT SEQUENCE ---
         async function bootSystem() {
-            const { data: { user } } = await db.auth.getUser();
-            if (!user) { window.location.replace('auth.html'); return; }
+            const { data: { user }, error: authError } = await db.auth.getUser();
+            
+            if (!user || authError) { window.location.replace('auth.html'); return; }
             userAuth = user;
 
-            // Fetch Profile Data
             const { data, error } = await db.from('profiles').select('*').eq('id', user.id).single();
             
             if (error || !data) {
-                // Should not happen if SQL trigger worked, but fallback
                 await db.from('profiles').insert({ id: user.id, email: user.email });
                 switchScreen('screen-onboarding');
             } else {
@@ -313,152 +272,120 @@
                 if (!userProfile.setup_complete) {
                     switchScreen('screen-onboarding');
                 } else {
-                    document.getElementById('dash-welcome').innerText = `Welcome back, ${userProfile.display_name}.`;
+                    document.getElementById('dash-welcome').innerText = `Welcome back, @${userProfile.username}.`;
                     switchScreen('screen-main-dash');
-                    loadMessengerData(); // Preload connections
+                    loadMessengerData(); // Boot the comms module
                 }
             }
         }
 
-        // --- ONBOARDING LOGIC ---
+        // --- 2. IDENTITY FORGE (PASSWORD CREATION) ---
         document.getElementById('setup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const pass1 = document.getElementById('in-pass').value;
+            const pass2 = document.getElementById('in-pass-confirm').value;
+
+            if(pass1 !== pass2) return showToast("Security Keys do not match! Try again.", true);
+            if(pass1.length < 6) return showToast("Security Key too weak. Need 6+ characters.", true);
+
             const updates = {
-                username: document.getElementById('in-username').value,
+                username: document.getElementById('in-username').value.toLowerCase().trim(),
                 display_name: document.getElementById('in-display').value,
                 phone: document.getElementById('in-phone').value,
                 avatar_url: document.getElementById('in-avatar').value,
-                about: document.getElementById('in-about').value,
-                links: document.getElementById('in-links').value
+                setup_complete: true
             };
             
-            // Note: username must be unique. A real app needs a duplicate checker here.
-            const { error } = await db.from('profiles').update(updates).eq('id', userAuth.id);
-            if(error) { alert("Error: " + error.message); return; }
+            const { error: profileErr } = await db.from('profiles').update(updates).eq('id', userAuth.id);
+            if(profileErr) return showToast("Database Error: " + profileErr.message, true); 
+            
+            const { error: passErr } = await db.auth.updateUser({ password: pass1 });
+            if(passErr) return showToast("Auth Error: Could not set password. " + passErr.message, true);
             
             userProfile = { ...userProfile, ...updates };
-            switchScreen('screen-account-type');
-        });
-
-        async function finalizeSetup() {
-            const { error } = await db.from('profiles').update({ setup_complete: true, account_type: 'User' }).eq('id', userAuth.id);
-            document.getElementById('dash-welcome').innerText = `Welcome, ${userProfile.display_name}.`;
+            document.getElementById('dash-welcome').innerText = `Welcome to the Matrix, @${userProfile.username}.`;
             switchScreen('screen-main-dash');
             loadMessengerData();
+        });
+
+        async function logOut() {
+            await db.auth.signOut();
+            window.location.replace('auth.html');
         }
 
-        function selectType(type) { /* Aesthetic only for now */ }
-
-        // --- MESSENGER ENGINE ---
+        // --- 3. MESSENGER LOGIC ---
         let currentTab = 'chats';
+        let currentChatUser = null;
+        let friendsList = [];
         
         function switchTab(tab) {
             currentTab = tab;
             document.getElementById('tab-chats').classList.toggle('active', tab === 'chats');
             document.getElementById('tab-connect').classList.toggle('active', tab === 'connect');
             document.getElementById('search-bar').style.display = tab === 'connect' ? 'block' : 'none';
-            
             if(tab === 'chats') renderChatsList();
             if(tab === 'connect') document.getElementById('dynamic-list').innerHTML = '<div style="color:#555; text-align:center; padding:20px;">Search by exact username</div>';
         }
 
-        // Search for new users
         document.getElementById('search-bar').addEventListener('input', async (e) => {
             if(currentTab !== 'connect') return;
             const query = e.target.value.trim();
             if(query.length < 3) return;
-
-            // Search profiles (excluding self)
-            const { data, error } = await db.from('profiles').select('id, username, display_name').ilike('username', `%${query}%`).neq('id', userAuth.id);
-            
+            const { data } = await db.from('profiles').select('id, username, display_name').ilike('username', `%${query}%`).neq('id', userAuth.id);
             const list = document.getElementById('dynamic-list');
             list.innerHTML = '';
-            
-            if(data) {
-                data.forEach(p => {
-                    list.innerHTML += `
-                        <div class="contact-card">
-                            <div class="contact-info">
-                                <span class="c-name">${p.display_name || 'Unknown'}</span>
-                                <span class="c-id">@${p.username}</span>
-                            </div>
-                            <button class="btn-small btn-req" onclick="sendRequest('${p.id}')">Add</button>
-                        </div>
-                    `;
-                });
-            }
+            if(data) data.forEach(p => {
+                list.innerHTML += `<div class="contact-card"><div class="contact-info"><span class="c-name">${p.display_name || 'Unknown'}</span><span class="c-id">@${p.username}</span></div><button class="btn-small btn-req" onclick="sendRequest('${p.id}')">Add</button></div>`;
+            });
         });
 
         async function sendRequest(receiverId) {
             await db.from('connections').insert({ requester_id: userAuth.id, receiver_id: receiverId, status: 'pending' });
-            alert("Connection Request Sent");
+            showToast("Connection Request Transmitted");
         }
 
         async function acceptRequest(connId) {
             await db.from('connections').update({ status: 'accepted' }).eq('id', connId);
-            loadMessengerData(); // reload
+            loadMessengerData();
         }
 
-        // Load Friendships and Pending Requests
         async function loadMessengerData() {
-            // Get connections where I am requester OR receiver
             const { data: conns } = await db.from('connections').select('*, requester:profiles!requester_id(*), receiver:profiles!receiver_id(*)').or(`requester_id.eq.${userAuth.id},receiver_id.eq.${userAuth.id}`);
-            
             friendsList = conns || [];
             if(currentTab === 'chats') renderChatsList();
 
-            // Realtime Listener for new messages AND new friend requests
-            db.channel('system_channel')
-              .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => handleNewMessage(payload.new))
-              .on('postgres_changes', { event: '*', schema: 'public', table: 'connections' }, () => loadMessengerData()) // Reload on new request
-              .subscribe();
+            // Only subscribe ONCE to prevent the Ghost Echo!
+            if (!systemChannelActive) {
+                db.channel('system_channel')
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => handleNewMessage(payload.new))
+                  .on('postgres_changes', { event: '*', schema: 'public', table: 'connections' }, () => loadMessengerData())
+                  .subscribe();
+                systemChannelActive = true;
+            }
         }
 
         function renderChatsList() {
             const list = document.getElementById('dynamic-list');
             list.innerHTML = '';
-            
             friendsList.forEach(conn => {
                 const isRequester = conn.requester_id === userAuth.id;
                 const otherUser = isRequester ? conn.receiver : conn.requester;
-                
                 if(conn.status === 'accepted') {
-                    list.innerHTML += `
-                        <div class="contact-card" onclick="openChat('${otherUser.id}', '${otherUser.display_name}')">
-                            <div class="contact-info">
-                                <span class="c-name">${otherUser.display_name}</span>
-                                <span class="c-id">@${otherUser.username}</span>
-                            </div>
-                        </div>
-                    `;
+                    list.innerHTML += `<div class="contact-card" onclick="openChat('${otherUser.id}', '${otherUser.display_name}')"><div class="contact-info"><span class="c-name">${otherUser.display_name}</span><span class="c-id">@${otherUser.username}</span></div></div>`;
                 } else if(conn.status === 'pending' && !isRequester) {
-                    // Someone sent ME a request
-                    list.innerHTML += `
-                        <div class="contact-card" style="border-left: 3px solid var(--success);">
-                            <div class="contact-info">
-                                <span class="c-name">${otherUser.display_name}</span>
-                                <span class="c-id">Wants to connect</span>
-                            </div>
-                            <button class="btn-small btn-acc" onclick="acceptRequest('${conn.id}')">Accept</button>
-                        </div>
-                    `;
+                    list.innerHTML += `<div class="contact-card" style="border-left: 3px solid var(--success);"><div class="contact-info"><span class="c-name">${otherUser.display_name}</span><span class="c-id">Wants to connect</span></div><button class="btn-small btn-acc" onclick="acceptRequest('${conn.id}')">Accept</button></div>`;
                 }
             });
         }
 
-        // --- CHAT LOGIC ---
         async function openChat(targetId, targetName) {
             currentChatUser = targetId;
             document.getElementById('chat-header').style.display = 'flex';
             document.getElementById('chat-form').style.display = 'flex';
             document.getElementById('chat-target-name').innerText = targetName;
             
-            // Load History
-            const { data } = await db.from('messages')
-                .select('*')
-                .or(`and(sender_id.eq.${userAuth.id},receiver_id.eq.${targetId}),and(sender_id.eq.${targetId},receiver_id.eq.${userAuth.id})`)
-                .order('created_at', { ascending: true });
-
+            const { data } = await db.from('messages').select('*').or(`and(sender_id.eq.${userAuth.id},receiver_id.eq.${targetId}),and(sender_id.eq.${targetId},receiver_id.eq.${userAuth.id})`).order('created_at', { ascending: true });
             const box = document.getElementById('chat-box');
             box.innerHTML = '';
             if(data) data.forEach(msg => drawMessage(msg));
@@ -466,7 +393,7 @@
         }
 
         function drawMessage(msg) {
-            if(msg.sender_id !== currentChatUser && msg.sender_id !== userAuth.id) return; // Not for this chat window
+            if(msg.sender_id !== currentChatUser && msg.sender_id !== userAuth.id) return;
             const box = document.getElementById('chat-box');
             const isMe = msg.sender_id === userAuth.id;
             box.innerHTML += `<div class="message ${isMe ? 'msg-me' : 'msg-them'}">${msg.content}</div>`;
@@ -474,9 +401,7 @@
         }
 
         function handleNewMessage(msg) {
-            if(currentChatUser && (msg.sender_id === currentChatUser || msg.sender_id === userAuth.id)) {
-                drawMessage(msg);
-            }
+            if(currentChatUser && (msg.sender_id === currentChatUser || msg.sender_id === userAuth.id)) drawMessage(msg);
         }
 
         document.getElementById('chat-form').addEventListener('submit', async (e) => {
@@ -488,18 +413,116 @@
             await db.from('messages').insert({ sender_id: userAuth.id, receiver_id: currentChatUser, content: text });
         });
 
-        // --- CALL UI CONTROLS ---
-        function startCall(type) {
+        // --- 4. WEBRTC GHOST PROTOCOL (PRO-GRADE CAMERA HANDLING) ---
+        let localStream, remoteStream, peerConnection, isCaller = false, callTargetId = null;
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        const rtcChannel = db.channel('webrtc_ops', { config: { broadcast: { self: false } } });
+
+        rtcChannel.on('broadcast', { event: 'rtc-signal' }, (payload) => {
+            const data = payload.payload;
+            if (data.target !== userAuth?.id) return; 
+            if (data.type === 'call-offer') handleIncomingCall(data);
+            if (data.type === 'call-answer') handleAnswer(data);
+            if (data.type === 'ice-candidate') handleNewICECandidateMsg(data);
+            if (data.type === 'end-call') endCall(false); 
+        }).subscribe();
+
+        function sendSignal(type, payloadData) {
+            rtcChannel.send({ type: 'broadcast', event: 'rtc-signal', payload: { type: type, target: callTargetId, caller: userAuth.id, ...payloadData } });
+        }
+
+        async function startCall(type) {
+            if (!currentChatUser) return showToast("Select a target operative first.", true);
+            callTargetId = currentChatUser;
+            isCaller = true;
             document.getElementById('video-ui').style.display = 'flex';
-            document.getElementById('call-status').innerText = type === 'video' ? 'Initializing Video Protocols...' : 'Opening Encrypted Audio Channel...';
+            document.getElementById('call-status').innerText = `Dialing ${document.getElementById('chat-target-name').innerText}...`;
+            document.getElementById('answer-btn').style.display = 'none';
+
+            const success = await setupMedia(type === 'video');
+            if(!success) return endCall(); // Abort if hardware denied!
+
+            createPeerConnection();
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            sendSignal('call-offer', { sdp: offer, isVideo: type === 'video' });
         }
 
-        async function logOut() {
-            await db.auth.signOut();
-            window.location.replace('auth.html');
+        function handleIncomingCall(data) {
+            callTargetId = data.caller;
+            isCaller = false;
+            document.getElementById('video-ui').style.display = 'flex';
+            document.getElementById('call-status').innerText = "Incoming Transmission...";
+            document.getElementById('answer-btn').style.display = 'block';
+            
+            document.getElementById('answer-btn').onclick = async () => {
+                document.getElementById('answer-btn').style.display = 'none';
+                document.getElementById('call-status').innerText = "Connecting Secure P2P Link...";
+                
+                const success = await setupMedia(data.isVideo);
+                if(!success) return endCall(); // Abort if hardware denied!
+
+                createPeerConnection();
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                sendSignal('call-answer', { sdp: answer });
+            };
         }
 
-        // INIT
+        // UPGRADED HARDWARE INTERCEPTOR
+        async function setupMedia(videoEnabled) {
+            // First, check if the browser completely disabled media due to HTTP 127.0.0.1
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast("CRITICAL: Browser blocked hardware access! (Insecure IP)", true);
+                console.error("MediaDevices API is missing. You must apply the chrome://flags hack for 127.0.0.1.");
+                return false;
+            }
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: videoEnabled, audio: true });
+                document.getElementById('local-video').srcObject = localStream;
+                return true;
+            } catch (e) { 
+                console.error("Hardware bypass failed:", e); 
+                
+                // Intelligently tell you exactly why it failed
+                if (e.name === 'NotAllowedError') {
+                    showToast("Access Denied: You clicked 'Block' for camera permissions!", true);
+                } else if (e.name === 'NotFoundError') {
+                    showToast("No camera or microphone hardware detected on this machine!", true);
+                } else {
+                    showToast("Hardware Blocked! Are you on a secure connection?", true);
+                }
+                return false;
+            }
+        }
+
+        function createPeerConnection() {
+            peerConnection = new RTCPeerConnection(rtcConfig);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            peerConnection.ontrack = (event) => {
+                document.getElementById('call-status').innerText = "Encrypted Link Active";
+                document.getElementById('remote-video').srcObject = event.streams[0];
+            };
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) sendSignal('ice-candidate', { candidate: event.candidate });
+            };
+        }
+
+        async function handleAnswer(data) { if (peerConnection) await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp)); }
+        async function handleNewICECandidateMsg(data) { if (peerConnection && data.candidate) await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate)); }
+
+        function endCall(broadcast = true) {
+            if (broadcast && callTargetId) sendSignal('end-call', {});
+            if (peerConnection) { peerConnection.close(); peerConnection = null; }
+            if (localStream) { localStream.getTracks().forEach(track => track.stop()); document.getElementById('local-video').srcObject = null; }
+            document.getElementById('remote-video').srcObject = null;
+            document.getElementById('video-ui').style.display = 'none';
+            callTargetId = null;
+        }
+
+        // Initialize the System
         bootSystem();
     </script>
 </body>

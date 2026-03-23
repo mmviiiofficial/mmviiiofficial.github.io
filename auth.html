@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMVIII | Access Terminal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>MM8 | Access</title>
+    <link rel="icon" type="image/x-icon" href="assets/myicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Your menacing red aesthetic preserved */
             --primary-glow: rgba(255, 0, 0, 0.7); 
             --primary-solid: #ff0000;
             --bg-dark: #000000;
@@ -19,59 +17,67 @@
             --text-muted: #b0b0b0;
             --input-bg: rgba(30, 30, 30, 0.8);
             --btn-social-bg: #2a2a2a;
-            
-            /* Custom Status Colors */
             --error-color: #ff4444;
             --success-color: #00ff88;
         }
         
-        body {
-            margin: 0; padding: 0; font-family: 'Inter', sans-serif;
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-dark); color: var(--text-main);
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden; 
+            overflow: hidden; perspective: 1000px; 
+        }
+
+        #world {
+            position: absolute; top: 50%; left: 50%;
+            width: 100vw; height: 100vh;
+            transform-style: preserve-3d; will-change: transform;
+        }
+
+        .particle {
+            position: absolute; width: 3px; height: 3px;
+            background: #ffffff; border-radius: 50%;
+            box-shadow: 0 0 10px 3px var(--primary-glow), 0 0 25px 8px var(--primary-solid);
+            transform-style: preserve-3d;
         }
 
         .auth-container {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) translateZ(-3000px);
             background-color: var(--panel-bg);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             padding: 50px 40px; border-radius: 24px; width: 100%; max-width: 420px;
-            text-align: center; position: relative; border: 1px solid var(--panel-border);
+            text-align: center; border: 1px solid var(--panel-border);
             box-shadow: 0 0 40px -10px var(--primary-glow), inset 0 10px 15px -5px rgba(255, 255, 255, 0.1);
-            transition: height 0.3s ease;
+            transition: opacity 0.3s ease;
         }
 
         .auth-container::before {
             content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--primary-solid), transparent);
-            filter: blur(1px);
+            background: linear-gradient(90deg, transparent, var(--primary-solid), transparent); filter: blur(1px);
         }
 
-        h2 { margin: 0 0 10px 0; font-size: 2.2em; font-weight: 600; color: var(--text-main); }
-        .subtitle { margin: 0 0 25px 0; color: var(--text-muted); font-weight: 300; font-size: 1em; }
+        h2 { margin: 0 0 10px 0; font-size: 2.2em; font-weight: 600; }
+        .subtitle { margin: 0 0 25px 0; color: var(--text-muted); font-weight: 300; }
 
-        /* --- THE NEW NOTIFICATION SYSTEM --- */
         #status-message {
             display: none; margin-bottom: 20px; padding: 12px; border-radius: 8px;
-            font-size: 0.85em; font-weight: 500; text-align: center;
-            opacity: 0; transition: opacity 0.3s ease;
+            font-size: 0.85em; font-weight: 500; text-align: center; opacity: 0; transition: opacity 0.3s ease;
         }
         .status-error { background-color: rgba(255, 68, 68, 0.1); border: 1px solid var(--error-color); color: var(--error-color); }
         .status-success { background-color: rgba(0, 255, 136, 0.1); border: 1px solid var(--success-color); color: var(--success-color); }
 
-        .input-group { margin-bottom: 20px; text-align: left; position: relative; }
+        .input-group { margin-bottom: 20px; text-align: left; }
         .input-group label { display: block; margin-bottom: 8px; font-size: 0.85em; color: #aaa; font-weight: 400; }
         .input-wrapper { position: relative; display: flex; align-items: center; }
-
         .input-wrapper input {
             width: 100%; padding: 16px 60px 16px 16px; 
             background-color: var(--input-bg); border: 1px solid #333;
-            border-radius: 12px; color: white; font-size: 1em; box-sizing: border-box;
-            transition: all 0.3s ease;
+            border-radius: 12px; color: white; font-size: 1em; box-sizing: border-box; transition: all 0.3s ease;
         }
         .input-wrapper input:focus { outline: none; border-color: var(--primary-solid); background-color: rgba(40, 40, 40, 0.9); }
-
+        
         .input-login-btn {
             position: absolute; right: 8px; width: 42px; height: 42px;
             background: linear-gradient(135deg, #ff4d4d, var(--primary-solid));
@@ -88,184 +94,219 @@
         .social-btn-group { display: flex; flex-direction: column; gap: 15px; }
         .btn-social { width: 100%; padding: 14px; background-color: var(--btn-social-bg); color: var(--text-main); border: 1px solid #3a3a3a; border-radius: 12px; font-weight: 500; font-size: 1em; cursor: pointer; transition: all 0.3s ease; display: flex; justify-content: space-between; align-items: center; text-align: left; position: relative; }
         .btn-social:hover { background-color: #353535; border-color: #444; }
-        .social-logo { width: 20px; height: 20px; margin-right: 15px; flex-shrink: 0; }
-        .social-content { display: flex; align-items: center; width: 100%; justify-content: center; margin-left: -20px; }
-        .arrow-icon { color: #777; font-size: 1.1em; position: absolute; right: 18px; }
         
         .footer-text { margin-top: 35px; font-size: 0.9em; color: #888; font-weight: 300; }
         .footer-text span { color: var(--primary-solid); cursor: pointer; text-decoration: none; font-weight: 500; }
         .footer-text span:hover { text-decoration: underline; }
+
+        .toggle-link { font-size: 0.8em; color: var(--primary-solid); cursor: pointer; display: block; margin-top: 10px; text-align: right; }
+        .toggle-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
-    <div class="auth-container">
-        <h2 id="form-title">Welcome back</h2>
-        <p class="subtitle" id="form-subtitle">Sign in to your account</p>
-        
-        <div id="status-message"></div>
-        
-        <form id="auth-form">
-            <div class="input-group">
-                <label for="email">Email</label>
-                <div class="input-wrapper">
-                    <input type="email" id="email" required placeholder="username@gmail.com">
-                    <button type="submit" class="input-login-btn" id="submit-btn">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-                    </button>
-                </div>
-            </div>
+    <div id="world">
+        <div class="auth-container">
+            <h2 id="form-title">Mainframe Access</h2>
+            <p class="subtitle" id="form-subtitle">Enter your MM8 Credentials</p>
             
-            <div class="input-group" id="password-group" style="display:none;">
-                <label for="password">Security Key (Password)</label>
-                <div class="input-wrapper">
-                    <input type="password" id="password" placeholder="••••••••">
+            <div id="status-message"></div>
+            
+            <form id="auth-form">
+                <div id="login-fields">
+                    <div class="input-group">
+                        <label for="username">MM8 Username</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="username" placeholder="e.g. john_doe">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Security Key (Password)</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" placeholder="••••••••">
+                            <button type="submit" class="input-login-btn" id="login-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
+                <div id="signup-fields" style="display: none;">
+                    <div class="input-group">
+                        <label id="otp-label" for="otp-input">Email Address</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="otp-input" placeholder="username@gmail.com">
+                            <button type="submit" class="input-login-btn" id="signup-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="or-separator"><span>OR</span></div>
+
+            <div class="social-btn-group">
+                <button class="btn-social" id="btn-google">
+                    Continue with Google <span style="color:#777;">→</span>
+                </button>
             </div>
-        </form>
 
-        <div class="or-separator"><span>OR</span></div>
-
-        <div class="social-btn-group">
-            <button class="btn-social" id="btn-google">
-                <div class="social-content">
-                    <svg class="social-logo" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A353" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>
-                    Continue with Google
-                </div>
-                <span class="arrow-icon">→</span>
-            </button>
-            <button class="btn-social" id="btn-x">
-                <div class="social-content">
-                    <svg class="social-logo" viewBox="0 0 1200 1227" fill="none"><path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="white"></path></svg>
-                    Continue with X
-                </div>
-                <span class="arrow-icon">→</span>
-            </button>
-        </div>
-
-        <div class="footer-text">
-            <p id="toggle-hint">Don't have an account? <span onclick="toggleMode()">Sign up</span></p>
+            <div class="footer-text">
+                <p id="toggle-hint">New operative? <span onclick="toggleMode()">Initialize Account</span></p>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script>
-        // Your exact launch codes
+        // 3D Auto-Warp Engine
+        const world = document.getElementById('world');
+        for (let i = 0; i < 120; i++) {
+            let p = document.createElement('div');
+            p.className = 'particle';
+            let x = (Math.random() - 0.5) * 4000;
+            let y = (Math.random() - 0.5) * 4000;
+            let z = (Math.random() * 4500) - 3500;
+            p.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
+            world.appendChild(p);
+        }
+
+        let cameraZ = 0, targetZ = 3000, mouseX = 0, mouseY = 0, targetRotX = 0, targetRotY = 0;
+        window.addEventListener('mousemove', (e) => {
+            targetRotY = (e.clientX / window.innerWidth - 0.5) * 5;
+            targetRotX = -(e.clientY / window.innerHeight - 0.5) * 5;
+        });
+
+        function animate() {
+            cameraZ += (targetZ - cameraZ) * 0.1; 
+            mouseX += (targetRotY - mouseX) * 0.05;
+            mouseY += (targetRotX - mouseY) * 0.05;
+            world.style.transform = `translate(-50%, -50%) translateZ(${cameraZ}px) rotateX(${mouseY}deg) rotateY(${mouseX}deg)`;
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Supabase Init
         const supabaseUrl = 'https://sxgormgshpwmeejpzepk.supabase.co/'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4Z29ybWdzaHB3bWVlanB6ZXBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzg0MDUsImV4cCI6MjA4OTc1NDQwNX0.OGkdFeecrCr2DxEt_ghI_9jzwE9VxZST5h_wmI5-2RM';
         const db = supabase.createClient(supabaseUrl, supabaseKey);
 
         let isLogin = true;
+        let isEmailOTP = true;
 
-        // Custom UI Notification Engine
         function notify(msg, isError = false) {
             const box = document.getElementById('status-message');
             box.innerText = msg;
             box.className = isError ? 'status-error' : 'status-success';
             box.style.display = 'block';
             setTimeout(() => box.style.opacity = '1', 10);
-            
-            if (isError) {
-                setTimeout(() => {
-                    box.style.opacity = '0';
-                    setTimeout(() => box.style.display = 'none', 300);
-                }, 4000);
-            }
+            if (isError) setTimeout(() => { box.style.opacity = '0'; setTimeout(() => box.style.display = 'none', 300); }, 5000);
         }
 
-        // Smooth UI Toggle 
         function toggleMode() {
             isLogin = !isLogin;
             document.getElementById('status-message').style.display = 'none'; 
             
-            const title = document.getElementById('form-title');
-            const subtitle = document.getElementById('form-subtitle');
-            const hint = document.getElementById('toggle-hint');
-            const passwordGroup = document.getElementById('password-group');
-            const passwordInput = document.getElementById('password');
-            const btn = document.getElementById('submit-btn');
-
-            passwordGroup.style.display = 'block';
-            passwordInput.parentNode.appendChild(btn);
-
             if (isLogin) {
-                title.innerText = "Welcome back";
-                subtitle.innerText = "Sign in to your account";
-                hint.innerHTML = 'Don\'t have an account? <span onclick="toggleMode()">Sign up</span>';
+                document.getElementById('form-title').innerText = "Mainframe Access";
+                document.getElementById('form-subtitle').innerText = "Enter your MM8 Credentials";
+                document.getElementById('login-fields').style.display = "block";
+                document.getElementById('signup-fields').style.display = "none";
+                document.getElementById('toggle-hint').innerHTML = 'New operative? <span onclick="toggleMode()">Initialize Account</span>';
             } else {
-                title.innerText = "Create account";
-                subtitle.innerText = "Join the MMVIII initiative";
-                passwordInput.value = ''; 
-                hint.innerHTML = 'Already an operative? <span onclick="toggleMode()">Sign in</span>';
+                document.getElementById('form-title').innerText = "Initialize Account";
+                document.getElementById('form-subtitle').innerText = "Link a secure comms channel to begin";
+                document.getElementById('login-fields').style.display = "none";
+                document.getElementById('signup-fields').style.display = "block";
+                document.getElementById('toggle-hint').innerHTML = 'Already registered? <span onclick="toggleMode()">Access Mainframe</span>';
             }
         }
 
-        document.getElementById('password-group').style.display = 'block';
-        document.getElementById('password').parentNode.appendChild(document.getElementById('submit-btn'));
+        function toggleOTPType() {
+            isEmailOTP = !isEmailOTP;
+            const label = document.getElementById('otp-label');
+            const input = document.getElementById('otp-input');
+            const toggle = document.getElementById('otp-toggle');
+            
+            if (isEmailOTP) {
+                label.innerText = "Email Address";
+                input.placeholder = "username@gmail.com";
+                toggle.innerText = "Use Mobile Number instead";
+            } else {
+                label.innerText = "Mobile Number";
+                input.placeholder = "+1 234 567 8900";
+                toggle.innerText = "Use Email Address instead";
+            }
+        }
 
-        // Database Auth Engine
         document.getElementById('auth-form').addEventListener('submit', async function(e) {
             e.preventDefault(); 
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const btn = document.getElementById('submit-btn');
             
-            btn.style.opacity = '0.5';
-            btn.disabled = true;
-
             try {
                 if (isLogin) {
-                    // --- CLASSIC LOGIN ---
-                    const { data, error } = await db.auth.signInWithPassword({ 
-                        email: email, 
+                    // --- THE USERNAME BYPASS PROTOCOL ---
+                    const username = document.getElementById('username').value.trim();
+                    const password = document.getElementById('password').value;
+                    if(!username || !password) throw new Error("Enter both Username and Security Key.");
+
+                    notify("Locating operative...", false);
+
+                    // 1. Find the email associated with this username
+                    const { data: profileData, error: profileErr } = await db
+                        .from('profiles')
+                        .select('email')
+                        .eq('username', username)
+                        .single();
+
+                    if (profileErr || !profileData) throw new Error("Operative not found in the matrix.");
+
+                    // 2. Log in using the mapped email
+                    const { error } = await db.auth.signInWithPassword({ 
+                        email: profileData.email, 
                         password: password 
                     });
                     
                     if (error) throw error;
                     
                     notify("Access Granted. Initializing dashboard...", false);
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 800); 
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800); 
 
                 } else {
-                    // --- STANDARD SIGNUP ---
-                    if (!password || password.length < 6) throw new Error("Security key must be at least 6 characters.");
+                    // --- SIGNUP OTP PROTOCOL ---
+                    const contactInfo = document.getElementById('otp-input').value.trim();
+                    if(!contactInfo) throw new Error("Enter a valid comms channel.");
                     
-                    const { data, error } = await db.auth.signUp({ 
-                        email: email, 
-                        password: password 
-                    });
-                    
-                    if (error) throw error; 
-                    
-                    // --- THE GHOST PROTOCOL BYPASS ---
-                    // Supabase fakes a success if the email exists. But if it's fake, the identities array is empty.
-                    if (data.user && data.user.identities && data.user.identities.length === 0) {
-                        throw new Error("This operative is already registered. Please return to login.");
+                    notify("Transmitting secure activation link...", false);
+
+                    if (isEmailOTP) {
+                        const { error } = await db.auth.signInWithOtp({ 
+                            email: contactInfo,
+                            options: { emailRedirectTo: window.location.origin + '/dashboard.html' }
+                        });
+                        if (error) throw error;
+                        notify("Activation Link Sent! Check your email to enter the matrix.", false);
+                    } else {
+                        // For Phone OTP (Requires Twilio setup in Supabase)
+                        const { error } = await db.auth.signInWithOtp({ phone: contactInfo });
+                        if (error) throw error;
+                        
+                        // We ask for OTP prompt here
+                        const token = prompt("Enter the 6-digit SMS code received:");
+                        if (token) {
+                            const { error: verifyErr } = await db.auth.verifyOtp({ phone: contactInfo, token, type: 'sms' });
+                            if (verifyErr) throw verifyErr;
+                            notify("Access Granted. Initializing dashboard...", false);
+                            setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+                        }
                     }
-                    
-                    // If we pass the check, they are instantly logged in because Confirm Email is OFF
-                    notify("Credentials logged! Processing access...", false);
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 1500);
                 }
             } catch (error) {
                 console.error("Access Denied:", error.message);
                 notify(error.message, true); 
-            } finally {
-                btn.style.opacity = '1';
-                btn.disabled = false;
             }
         });
 
-        // Social Hooks 
         document.getElementById('btn-google').addEventListener('click', async () => {
             const { error } = await db.auth.signInWithOAuth({
                 provider: 'google',
