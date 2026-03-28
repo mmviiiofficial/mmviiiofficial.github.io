@@ -91,6 +91,18 @@
         }
         .scroll-hint svg { width: 24px; height: 24px; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+        @media (max-width: 768px) {
+            .home-container {
+                padding: 40px 24px;
+                width: 88%;
+                max-width: 100%;
+                border-radius: 18px;
+            }
+            h1 { font-size: 2em; }
+            p  { font-size: 0.95em; margin-bottom: 35px; }
+            .portal-btn { font-size: 0.95em; padding: 14px 24px; }
+        }
     </style>
 </head>
 <body>
@@ -98,9 +110,8 @@
     <div id="world">
         <div class="home-container" id="card">
             <h1>Welcome to MM8</h1>
-            <p>The genesis of something massive. Initialize your access clearance to join the initiative.</p>
+            <p><i>Where Art becomes Aether</i>.<br> Initialize your access clearance to join the Lattice.</p>
             <a href="auth.html" class="portal-btn">ENTER MM8 MAIN ACCESS</a>
-            <a href="https://github.com/mmviiiofficial/mmviiiofficial.github.io" class="source-link">View Mainframe Source</a>
         </div>
     </div>
 

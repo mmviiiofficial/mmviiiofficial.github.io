@@ -101,6 +101,19 @@
 
         .toggle-link { font-size: 0.8em; color: var(--primary-solid); cursor: pointer; display: block; margin-top: 10px; text-align: right; }
         .toggle-link:hover { text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: 36px 22px;
+                width: 92%;
+                max-width: 100%;
+                border-radius: 18px;
+            }
+            h2 { font-size: 1.7em; }
+            .subtitle { font-size: 0.9em; margin-bottom: 18px; }
+            .input-wrapper input { padding: 14px 55px 14px 14px; font-size: 0.95em; }
+            .btn-social { padding: 12px; font-size: 0.95em; }
+        }
     </style>
 </head>
 <body>
@@ -117,7 +130,7 @@
                     <div class="input-group">
                         <label for="username">MM8 Username</label>
                         <div class="input-wrapper">
-                            <input type="text" id="username" placeholder="e.g. john_doe">
+                            <input type="text" id="username" placeholder="username">
                         </div>
                     </div>
                     <div class="input-group">
