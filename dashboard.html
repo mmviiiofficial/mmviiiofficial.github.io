@@ -8,6 +8,9 @@
     <link rel="icon" type="image/x-icon" href="assets/myicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/wavesurfer.js@7"></script>
+    <!-- Google API Suite -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
     <style>
         :root {
             --primary-glow: rgba(255, 0, 0, 0.7);
@@ -1218,6 +1221,47 @@
                                 <line x1="17" y1="9" x2="23" y2="15"></line>
                             </svg></button>
                     </div>
+
+                    <!-- AI AGENT SPECIAL SETTINGS -->
+                    <div id="ai-agent-settings" style="display:none; text-align: left; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--panel-border);">
+                        <button id="stop-speech-btn" class="btn-main" onclick="stopSpeech()" style="display:none; background:var(--primary-solid); border:none; color:white; font-size:0.75em; padding:8px 12px; border-radius:30px; margin-bottom:15px; width:100%; box-shadow:0 0 15px var(--primary-glow); animation:pulseGlow 2s infinite;">⏹ STOP NEURAL OUTPUT</button>
+                        <div style="color: var(--primary-solid); font-weight: 800; font-size: 0.85em; margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase;">⚡ Neural Settings</div>
+                        <div class="input-group">
+                            <label>Core Intelligence</label>
+                            <select id="ai-model-select" style="width:100%; background:#111; border:1px solid #333; color:white; padding:8px; border-radius:6px; font-family:inherit; font-size:0.9em; outline:none;">
+                                <option value="llama3:latest">Llama 3 (Local)</option>
+                                <option value="qwen2.5:latest">Qwen 2.5 (Local)</option>
+                            </select>
+                        </div>
+
+                        <div style="color: var(--primary-solid); font-weight: 800; font-size: 0.85em; margin-top: 20px; margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase;">🌐 Universal Translator</div>
+                        <div class="input-group">
+                            <label>AI Output Language</label>
+                            <select id="ai-lang-select" style="width:100%; background:#111; border:1px solid #333; color:white; padding:8px; border-radius:6px; font-family:inherit; font-size:0.9em; outline:none;">
+                                <option value="en">English</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="hi">Hindi</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ml">Malayalam</option>
+                                <option value="ta">Tamil</option>
+                                <option value="ru">Russian</option>
+                            </select>
+                        </div>
+
+                        <div style="color: var(--primary-solid); font-weight: 800; font-size: 0.85em; margin-top: 25px; margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase;">📧 Gmail Connectivity</div>
+                        <div class="input-group">
+                            <label>Google Client ID</label>
+                            <input type="password" id="gmail-client-id-input" placeholder="Paste ID here..." style="width:100%; background:#111; border:1px solid #333; color:white; padding:8px; border-radius:6px; font-size:0.8em; outline:none;" onchange="saveGmailID()">
+                            <div style="margin-top:5px; font-size:0.6em; color:#888;">
+                                <a href="https://console.cloud.google.com/" target="_blank" style="color:var(--primary-solid); text-decoration:none;">Get your ID here &nearr;</a>
+                            </div>
+                        </div>
+
+                        <button onclick="clearAIMemory()" style="margin-top:30px; background:transparent; border:1px solid rgba(255,0,0,0.3); color:#ff4444; font-size:0.75em; padding:10px; border-radius:30px; width:100%; cursor:pointer; font-weight:bold; letter-spacing:1px; transition:all 0.3s ease;" onmouseover="this.style.background='rgba(255,0,0,0.1)'" onmouseout="this.style.background='transparent'">🛑 WIPE NEURAL MEMORY</button>
+                    </div>
+                </div>
                 </div>
 
                 <!-- 2. CENTER COLUMN: Chat Main -->
@@ -1452,6 +1496,16 @@
         let userProfile = null;
         let systemChannelActive = false; // Prevents the Ghost Echo bug!
 
+        // --- MARCUS METATRON AI CONFIG ---
+        const MARCUS_ID = 'ai_marcus_metatron';
+        const MARCUS_NAME = 'Marcus Metatron';
+        const MARCUS_USERNAME = 'metatron_ai';
+        const MARCUS_PFP = 'assets/marcus_metatron_ai_pfp.png';
+        const OLLAMA_CLOUD_KEY = "7467ffc8e6364e8cb65c728248ff0877.V4i9AeKE71fcHBnA4HgREHp2";
+        const OLLAMA_HOST = "https://ollama.com";
+        const OLLAMA_LOCAL_HOST = "http://localhost:11434"; // Robust Fallback
+        let lastInputWasVoice = false;
+
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
@@ -1516,6 +1570,13 @@
 
             if (!user || authError) { window.location.replace('auth.html'); return; }
             userAuth = user;
+
+            // Load stored Gmail ID if exists
+            const savedGmailId = localStorage.getItem('gmail_client_id_stored');
+            const gmailInputExists = document.getElementById('gmail-client-id-input');
+            if (savedGmailId && gmailInputExists) {
+                gmailInputExists.value = savedGmailId;
+            }
 
             const { data, error } = await db.from('profiles').select('*').eq('id', user.id).single();
 
@@ -1644,6 +1705,22 @@
         function renderChatsList() {
             const list = document.getElementById('dynamic-list');
             list.innerHTML = '';
+
+            // 1. PREPEND POWER USER: MARCUS METATRON AI
+            const marcusParams = `openChat('${MARCUS_ID}', '${MARCUS_NAME}', '${MARCUS_USERNAME}', 'AI_AGENT', '${encodeURIComponent(MARCUS_PFP)}')`;
+            list.innerHTML += `
+                <div class="contact-card active-ai" onclick="${marcusParams}" style="border-left: 3px solid var(--primary-solid); background: rgba(255, 0, 0, 0.05);">
+                    <div class="contact-card-left">
+                        <div class="contact-avatar" style="border-color: var(--primary-solid);"><img src="${MARCUS_PFP}" alt="" loading="lazy"></div>
+                        <div class="contact-info">
+                            <span class="c-name" style="color: var(--primary-solid); font-weight: 800;">⚡ ${MARCUS_NAME}</span>
+                            <span class="c-id">AI Agent / Looper 3.9</span>
+                        </div>
+                    </div>
+                    <div style="color: var(--primary-solid); font-size: 0.7em; font-weight: bold; background: rgba(255,0,0,0.1); padding: 2px 6px; border-radius: 4px;">POWER</div>
+                </div>`;
+
+            // 2. RENDER FRIENDS LIST
             friendsList.forEach(conn => {
                 const isRequester = conn.requester_id === userAuth.id;
                 const otherUser = isRequester ? conn.receiver : conn.requester;
@@ -1676,6 +1753,37 @@
             });
         }
 
+        function scrollToBottom() {
+            const box = document.getElementById('chat-box');
+            if (box) box.scrollTop = box.scrollHeight;
+        }
+
+        async function fetchLocalModels() {
+            const select = document.getElementById('ai-model-select');
+            try {
+                const response = await fetch(OLLAMA_LOCAL_HOST + '/api/tags');
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                
+                if (data.models && data.models.length > 0) {
+                    select.innerHTML = '';
+                    data.models.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.name;
+                        opt.innerText = m.name + ' (Local)';
+                        select.appendChild(opt);
+                    });
+                    // Add Cloud options back as secondary
+                    const cloudOpt = document.createElement('option');
+                    cloudOpt.value = 'qwen2.5';
+                    cloudOpt.innerText = 'Qwen 2.5 (Cloud Attempt)';
+                    select.appendChild(cloudOpt);
+                }
+            } catch (err) {
+                console.warn("Could not fetch local models. Using defaults.");
+            }
+        }
+
         let lastRenderedDateStr = null; // Global tracker for sticky dates
 
         async function openChat(targetId, targetName, targetUsername, connectId, targetAvatarEncoded) {
@@ -1689,26 +1797,28 @@
             // Populate Left Gab Sidebar
             document.getElementById('left-user-info').style.display = 'flex';
             document.getElementById('info-username').innerText = targetName;
-            // Provide fallback if connectId is absent (during quick reloads)
-            if (connectId) document.getElementById('info-connection-id').innerText = `@${targetUsername} / ID: ${connectId.substring(0, 8)}`;
+            // Handle Marcus AI specifically
+            if (targetId === MARCUS_ID) {
+                document.getElementById('ai-agent-settings').style.display = 'block';
+                document.getElementById('info-connection-id').innerText = `Looper 3.9 / AI PROTOCOL`;
+                
+                fetchLocalModels(); // Dynamically find available neural nodes
 
-            const pfpEl = document.querySelector('.user-info-photo');
-            if (targetAvatarEncoded) {
-                const url = decodeURIComponent(targetAvatarEncoded);
-                pfpEl.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-                pfpEl.onclick = () => {
-                    document.getElementById('image-viewer-src').src = url;
-                    document.getElementById('image-viewer-modal').style.display = 'flex';
-                };
+                // Clear and load AI memory (local for now)
+                const box = document.getElementById('chat-box');
+                box.innerHTML = '';
+                const aiMem = JSON.parse(localStorage.getItem('marcus_memory_' + userAuth.id) || '[]');
+                aiMem.forEach(msg => drawMessage(msg));
+                scrollToBottom();
             } else {
-                pfpEl.innerHTML = `<svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-                pfpEl.onclick = null;
+                document.getElementById('ai-agent-settings').style.display = 'none';
+                if (connectId) document.getElementById('info-connection-id').innerText = `@${targetUsername} / ID: ${connectId.substring(0, 8)}`;
+                
+                const { data } = await db.from('messages').select('*').or(`and(sender_id.eq.${userAuth.id},receiver_id.eq.${targetId}),and(sender_id.eq.${targetId},receiver_id.eq.${userAuth.id})`).order('created_at', { ascending: true });
+                const box = document.getElementById('chat-box');
+                box.innerHTML = '';
+                if (data) data.forEach(msg => drawMessage(msg));
             }
-
-            const { data } = await db.from('messages').select('*').or(`and(sender_id.eq.${userAuth.id},receiver_id.eq.${targetId}),and(sender_id.eq.${targetId},receiver_id.eq.${userAuth.id})`).order('created_at', { ascending: true });
-            const box = document.getElementById('chat-box');
-            box.innerHTML = '';
-            if (data) data.forEach(msg => drawMessage(msg));
             
             // Give layout engine ms to paint before pushing scroll to bottom
             setTimeout(() => { box.scrollTop = box.scrollHeight; }, 50);
@@ -1773,7 +1883,35 @@
                 </div>
                 <!-- Render Body -->
                 <div class="message ${isMe ? 'msg-me' : 'msg-them'}">${(function (c) {
-                    // Voice message renderer (Waveform)
+                    if (c && c.match(/\[DRAFT_EMAIL\]:\s?to=.*?, subject=.*?, body=.*/)) {
+                        const emailPattern = /\[DRAFT_EMAIL\]:\s?to=(.*?), subject=(.*?), body=(.*)/;
+                        const match = c.match(emailPattern);
+                        if (match) {
+                            const to = match[1].trim();
+                            const subject = match[2].trim();
+                            const body = match[3].trim();
+                            
+                            const cardHtml = `
+                            <div style="background:rgba(0,0,0,0.5); border:1px solid var(--primary-solid); border-radius:12px; padding:20px; margin-top:10px; box-shadow:0 0 20px rgba(255,0,0,0.15);">
+                                <div style="color:var(--primary-solid); font-weight:800; font-size:0.8em; margin-bottom:15px; letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                    EMAIL DRAFT GENERATED
+                                </div>
+                                <div style="font-size:0.9em; color:#888; margin-bottom:12px;">
+                                    <b>To:</b> <span style="color:#eee;">${to}</span><br>
+                                    <b>Subject:</b> <span style="color:#eee;">${subject}</span>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:8px; font-size:0.92em; color:#ddd; margin-bottom:20px; line-height:1.5;">
+                                    ${body}
+                                </div>
+                                <button class="btn-main" onclick="executeEmailSend('${to}', '${subject.replace(/'/g, "\\'")}', '${body.replace(/'/g, "\\'")}', '${msg.id}')" style="font-size:0.8em; padding:10px;">AUTHORIZE & TRANSMIT VIA GMAIL</button>
+                            </div>`;
+                            
+                            const cleanText = c.replace(emailPattern, '').trim();
+                            return (cleanText ? `<p>${cleanText}</p>` : '') + cardHtml;
+                        }
+                    }
+
                     if (c.startsWith('[VOICE]:')) {
                         return `
                         <div class="voice-msg-container">
@@ -1784,6 +1922,7 @@
                             <div class="voice-duration" id="duration-${msg.id}">0:00</div>
                         </div>`;
                     }
+                    
                     let h = c.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     h = h.replace(/^&gt;&gt;\s\[FORWARDED\]\n/g, '<div style="font-size:0.75em; color:var(--primary-solid); margin-bottom:6px; font-weight:bold; display:flex; align-items:center; gap:5px; background:rgba(255,0,0,0.15); padding:4px 8px; border-radius:6px; width:max-content;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 17 20 12 15 7"></polyline><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg>Forwarded</div>');
                     h = h.replace(/&gt;\s\[Replying\sto:\s"([\s\S]*?)"\]\n\n/g, '<div style="background:rgba(0,0,0,0.3); border-left:3px solid var(--primary-solid); padding:8px 10px; margin-bottom:8px; font-size:0.85em; color:#ccc; border-radius:6px; max-height:80px; overflow:hidden; display:flex; flex-direction:column;"><span style="font-weight:bold; color:white; font-size:0.85em; margin-bottom:3px; display:flex; align-items:center; gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary-solid)" stroke-width="2"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>Replying</span>$1</div>');
@@ -1807,7 +1946,7 @@
                 setTimeout(() => initWaveform(msg.id, url, isMe), 10);
             }
             
-            if (!isUpdateRender) box.scrollTop = box.scrollHeight;
+            if (!isUpdateRender) scrollToBottom();
         }
 
         function handleNewMessage(msg) {
@@ -1960,7 +2099,277 @@
 
             input.value = '';
             input.style.height = 'auto'; // Reset text box size
-            await db.from('messages').insert({ sender_id: userAuth.id, receiver_id: currentChatUser, content: text });
+
+            if (currentChatUser === MARCUS_ID) {
+                // AI FLOW: Local memory only
+                const msg = { id: 'ai_' + Date.now(), sender_id: userAuth.id, receiver_id: MARCUS_ID, content: text, created_at: new Date().toISOString() };
+                drawMessage(msg);
+                saveAIMemory(msg);
+
+                // Set voice flag based on submission method
+                if (!lastInputWasVoice) lastInputWasVoice = false; // Reset if needed, handled by mic listener
+                handleMarcusResponse(text);
+                lastInputWasVoice = false; // Reset for next typing
+            } else {
+                await db.from('messages').insert({ sender_id: userAuth.id, receiver_id: currentChatUser, content: text });
+            }
+        });
+
+        // --- MARCUS METATRON AI ENGINE (OLLAMA + BRAIN) ---
+        async function handleMarcusResponse(userText) {
+            const box = document.getElementById('chat-box');
+            const aiModel = document.getElementById('ai-model-select').value;
+            const aiLang = document.getElementById('ai-lang-select').value;
+            const langName = document.getElementById('ai-lang-select').options[document.getElementById('ai-lang-select').selectedIndex].text;
+
+            const aiMsgId = 'ai_res_' + Date.now();
+            const placeholderMsg = { id: aiMsgId, sender_id: MARCUS_ID, receiver_id: userAuth.id, content: 'Neural Link Processing...', created_at: new Date().toISOString() };
+            drawMessage(placeholderMsg);
+            scrollToBottom();
+            
+            try {
+                // Task-oriented system prompt with Date Sync
+                const nowDate = "Sunday, March 29, 2026";
+                const systemPrompt = `[SYSTEM PROTOCOL:
+                1. Context: You are Marcus Metatron. Today is ${nowDate}.
+                2. Directives: You must respond in ${langName}.
+                3. Capability: "Send an email" task. Extract: Recipient Address, Subject, and Body.
+                4. Autonomy: If the user provides only the recipient and subject, YOU draft the professional body yourself. 
+                5. Email Draft Output: You must include the following EXACT line in your response when ready: 
+                   "[DRAFT_EMAIL]: to=${"{recipient}"}, subject=${"{subject}"}, body=${"{body}"}"
+                6. Note: Do not use English unless the target language is English.]`;
+
+                const history = JSON.parse(localStorage.getItem('marcus_memory_' + userAuth.id) || '[]').slice(-10);
+                const messages = history.map(m => ({ role: m.sender_id === userAuth.id ? 'user' : 'assistant', content: m.content }));
+                messages.push({ role: 'user', content: userText + "\n\n" + systemPrompt });
+
+                // ATTEMPT 1: Cloud Neural Link (Sensitive to CORS)
+                let response;
+                let errorBody = "";
+                try {
+                    response = await fetch(OLLAMA_HOST + '/api/chat', {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: { 
+                            'Content-Type': 'application/json', 
+                            'Authorization': `Bearer ${OLLAMA_CLOUD_KEY}` 
+                        },
+                        body: JSON.stringify({ model: aiModel, messages: messages, stream: false })
+                    });
+                    if (!response.ok) errorBody = await response.text();
+                } catch(e) { 
+                    console.warn("Cloud Link Forbidden (CORS). Attempting Local Matrix..."); 
+                }
+
+                // ATTEMPT 2: Local Matrix Fallback
+                if (!response || !response.ok) {
+                    try {
+                        const localRes = await fetch(OLLAMA_LOCAL_HOST + '/api/chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ model: aiModel.split(':')[0], messages: messages, stream: false })
+                        });
+                        if (localRes.ok) response = localRes;
+                        else errorBody = await localRes.text();
+                    } catch(e) {
+                         if (!response) throw new Error('NETWORK_OR_CORS');
+                    }
+                }
+
+                if (!response || !response.ok) {
+                    const errStatus = response ? response.status : 'NO_RESPONSE';
+                    throw new Error(`API_REJECTED|${errStatus}|${errorBody}`);
+                }
+                
+                const result = await response.json();
+                const aiText = result.message.content;
+
+                // Update UI and trigger TTS
+                const aiMsg = { id: aiMsgId, sender_id: MARCUS_ID, receiver_id: userAuth.id, content: aiText, created_at: new Date().toISOString() };
+                drawMessage(aiMsg, true);
+                saveAIMemory(aiMsg);
+                
+                if (lastInputWasVoice) {
+                    speakResponse(aiText, aiLang);
+                    document.getElementById('stop-speech-btn').style.display = 'block';
+                }
+                scrollToBottom();
+
+            } catch (err) {
+                console.error(err);
+                let userFriendlyErr = err.message;
+                
+                if (err.message === 'NETWORK_OR_CORS') {
+                    userFriendlyErr = `<strong>CORS SECURITY BLOCK</strong><br><br>
+                    Marcus cannot talk to ${OLLAMA_HOST} or Localhost directly from the browser.<br><br>
+                    <strong>How to fix:</strong><br>
+                    1. Close Ollama completely.<br>
+                    2. Windows: Set User Env Variable <code>OLLAMA_ORIGINS</code> to <code>*</code><br>
+                    3. Restart Ollama and refresh this page.`;
+                } else if (err.message.startsWith('API_REJECTED')) {
+                    const [_, status, body] = err.message.split('|');
+                    userFriendlyErr = `<strong>Neural Link Rejected (HTTP ${status})</strong><br><br>
+                    The server refused the connection.<br><br>
+                    <strong>Raw Response:</strong><br>
+                    <code>${body || 'No error details provided by server.'}</code>`;
+                }
+
+                const errorMsg = { id: aiMsgId, sender_id: MARCUS_ID, receiver_id: userAuth.id, content: '❌ Matrix Transmission Failure:<br><br>' + userFriendlyErr, created_at: new Date().toISOString() };
+                drawMessage(errorMsg, true);
+                scrollToBottom();
+            }
+        }
+
+        function saveAIMemory(msg) {
+            const mem = JSON.parse(localStorage.getItem('marcus_memory_' + userAuth.id) || '[]');
+            mem.push(msg);
+            localStorage.setItem('marcus_memory_' + userAuth.id, JSON.stringify(mem.slice(-50)));
+        }
+
+        function clearAIMemory() {
+            if (confirm("This will permanently WIPE Marcus's memory and chat history. Continue?")) {
+                localStorage.removeItem('marcus_memory_' + userAuth.id);
+                document.getElementById('chat-box').innerHTML = '';
+                showToast("Neural History Purged.");
+            }
+        }
+
+        // --- AUDITORY SYSTEM (STT & TTS) ---
+        let recognition = null;
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onstart = () => {
+                document.getElementById('mic-btn').classList.add('mic-btn-recording');
+                showToast('Neural link listening...');
+            };
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('msg-input').value = transcript;
+                lastInputWasVoice = true; // TRIGGER SELECTIVE VOCALIZATION
+                document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+            };
+            
+            recognition.onerror = () => {
+                document.getElementById('mic-btn').classList.remove('mic-btn-recording');
+                showToast('Voice decoding failure', true);
+            };
+            
+            recognition.onend = () => {
+                document.getElementById('mic-btn').classList.remove('mic-btn-recording');
+            };
+        }
+
+        function toggleVoiceRecognition() {
+            if (currentChatUser !== MARCUS_ID) return; // Only for Marcus
+            if (recognition) {
+                try { recognition.start(); } catch(e) { recognition.stop(); }
+            } else {
+                showToast('Speech API not supported in this browser', true);
+            }
+        }
+
+        function speakResponse(text, langCode) {
+            if (!('speechSynthesis' in window)) return;
+            speechSynthesis.cancel(); // Stop any current speech
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = langCode;
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            
+            utterance.onend = () => {
+                document.getElementById('stop-speech-btn').style.display = 'none';
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        function stopSpeech() {
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                document.getElementById('stop-speech-btn').style.display = 'none';
+            }
+        }
+
+        function saveGmailID() {
+            const id = document.getElementById('gmail-client-id-input').value.trim();
+            localStorage.setItem('gmail_client_id_stored', id);
+            showToast("Gmail Connectivity Saved.");
+        }
+
+        // --- GMAIL API AGENT HUB ---
+        // REPLACE THIS with your own Client ID from Google Cloud Console
+        const GMAIL_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; 
+        let googleToken = null;
+
+        async function executeEmailSend(to, subject, body, msgId) {
+            const GMAIL_CLIENT_ID = document.getElementById('gmail-client-id-input').value.trim();
+            
+            if (!GMAIL_CLIENT_ID || GMAIL_CLIENT_ID === '' || GMAIL_CLIENT_ID.startsWith('YOUR_GOOGLE')) {
+                showToast("Connection Error: Google Client ID Missing. Fill it in Marcus Settings.", true);
+                return;
+            }
+
+            try {
+                if (!googleToken) {
+                    const client = google.accounts.oauth2.initTokenClient({
+                        client_id: GMAIL_CLIENT_ID,
+                        scope: 'https://www.googleapis.com/auth/gmail.send',
+                        callback: async (response) => {
+                            if (response.error) throw new Error(response.error);
+                            googleToken = response.access_token;
+                            await performGmailTransmit(to, subject, body, msgId);
+                        },
+                    });
+                    client.requestAccessToken();
+                } else {
+                    await performGmailTransmit(to, subject, body, msgId);
+                }
+            } catch (err) {
+                showToast("Transmission Blocked: Auth Failure", true);
+            }
+        }
+
+        async function performGmailTransmit(to, subject, body, msgId) {
+            showToast("Encrypting Transmission...");
+            const email = [
+                'Content-Type: text/plain; charset="UTF-8"\r\n',
+                'MIME-Version: 1.0\r\n',
+                `To: ${to}\r\n`,
+                `Subject: ${subject}\r\n\r\n`,
+                body
+            ].join('');
+
+            const base64SafeEmail = btoa(unescape(encodeURIComponent(email))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+            const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${googleToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ raw: base64SafeEmail })
+            });
+
+            if (response.ok) {
+                showToast("SECURE TRANSMISSION COMPLETE");
+                const el = document.getElementById('msg-' + msgId);
+                if (el) el.innerHTML = `<div style="color:var(--success); font-weight:bold; padding:10px;">SUCCESS: Email deployed to ${to} via Secure Gmail Protocol.</div>`;
+            } else {
+                showToast("Neural Node Shutdown: Internal API Error", true);
+            }
+        }
+
+        // Update mic-btn to support Marcus specifically
+        document.getElementById('mic-btn').addEventListener('click', (e) => {
+            if (currentChatUser === MARCUS_ID) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleVoiceRecognition();
+            }
         });
 
         // --- 4. WEBRTC GHOST PROTOCOL (PRO-GRADE CAMERA HANDLING) ---
