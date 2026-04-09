@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MM8 | Gamified Coliseum of Cinema and Arts</title>
+    <script type="module" crossorigin src="/assets/index-CL3Yl2HV.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CAVpHC0h.css">
+  </head>
+  <body>
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal-overlay">
+      <div class="modal-content">
+        <button id="closeModalBtn" class="close-btn">&times;</button>
+        <h2 id="modalTitle">Access Portal</h2>
+        <p class="modal-subtitle">Synchronize your biometrics to the Lattice.</p>
+        
+        <form id="authForm">
+          <div class="input-group">
+            <label for="email">Designation (Email)</label>
+            <input type="email" id="email" required placeholder="cipher@sanctuary.io" />
+          </div>
+          <div class="input-group">
+            <label for="password">Security Key</label>
+            <input type="password" id="password" required placeholder="••••••••" />
+          </div>
+          <div id="authMessage" class="auth-message"></div>
+          <button type="submit" class="btn btn-primary w-100" id="submitAuthBtn">Initialize Sequence</button>
+        </form>
+        <div class="modal-footer">
+          <span id="toggleAuthMode">Forge new Nexus (Sign Up)</span>
+        </div>
+      </div>
+    </div>
+
+    <header>
+      <div class="brand-logo">MM<span>8</span></div>
+      <button id="mobileMenuBtn" class="mobile-menu-btn">&#9776;</button>
+      <nav class="nav-links" id="navLinks">
+        <a href="#sculpt" class="nav-item">S.C.U.L.P.T</a>
+        <a href="#lattice" class="nav-item">The Lattice</a>
+        <button id="openAuthBtn" class="btn btn-secondary nav-btn">Access Portal</button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Hero Section -->
+      <section class="hero container">
+        <h1>Don't Scroll.<br><span>Scout.</span></h1>
+        <p>The Gamified Coliseum of Cinema and Arts. Experience the purest distillation of human talent.</p>
+        <div class="cta-buttons">
+          <a href="/Sample.apk" download class="btn btn-primary" id="downloadBtn">Download App (Alpha)</a>
+          <a href="#lattice" class="btn btn-secondary">Explore The Lattice</a>
+        </div>
+      </section>
+
+      <!-- S.C.U.L.P.T Engine Section -->
+      <section id="sculpt" class="sculpt-engine">
+        <div class="container">
+          <span class="section-label">Proprietary Evaluation Tech</span>
+          <h2>The S.C.U.L.P.T. Engine</h2>
+          <p style="max-width: 600px; margin-top: 1rem;">
+            Sentient Computational Unit for Latent Potential Tracking. A system built to quantify charisma and eliminate bias. Every video is processed with blurred faces to force judgment purely on voice and body language.
+          </p>
+
+          <div class="sculpt-grid">
+            <div class="feature-card">
+              <h3>Micro-expression Latency</h3>
+              <p>Tracking milliseconds of delay between stimulus and facial reaction to separate organic genius from memorized performance.</p>
+            </div>
+            <div class="feature-card">
+              <h3>Vocal Gravity</h3>
+              <p>Analyzing harmonic texture versus volume. Identifying deep, resonating menace over mere shouting.</p>
+            </div>
+            <div class="feature-card">
+              <h3>Stillness Quotient</h3>
+              <p>Mapping physical pose estimation to measure unwavering confidence through the absolute lack of nervous movement.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The Lattice Section -->
+      <section id="lattice" class="lattice-section container">
+        <span class="section-label">Exclusive Premiere Lobby</span>
+        <div class="lattice-grid">
+          <div class="lattice-content">
+            <h2>The Lattice</h2>
+            <p style="margin-top: 1rem; margin-bottom: 2rem;">
+              The official hub for the MM8 Team Vanguard. This is the staging ground for <strong>COCHINDOX</strong>, an upcoming high-budget cinematic franchise built entirely from the community.
+            </p>
+            <p>
+              Each production within The Lattice is called an <strong>OCTANE</strong>: exactly 1 hour and 4 minutes of narrative intensity, strategically divided into 8 distinct <strong>FRACTALS</strong> of 8 minutes each.
+            </p>
+          </div>
+          
+          <div class="lattice-visual">
+            <div class="feature-card octane-card">
+              <h3 style="font-size: 1.1rem; color: var(--primary-500); margin-bottom: 1.5rem;">COCHINDOX: OCTANE 01</h3>
+              <div class="octane-display" id="fractalGrid">
+                <!-- Javascript will populate fractals here -->
+              </div>
+              <p class="octane-footer">
+                8 FRACTALS / 8 MINUTES EACH
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <p>&copy; 2026 MM8 Universe. Built for the human resonance.</p>
+    </footer>
+
+  </body>
+</html>
